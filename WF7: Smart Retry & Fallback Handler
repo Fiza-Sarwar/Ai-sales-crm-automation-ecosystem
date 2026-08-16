@@ -1,0 +1,686 @@
+{
+  "name": "WF7 - Delivery & Reply Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "messaging-callback/",
+        "options": {}
+      },
+      "id": "bb8d1d94-a3d0-4a1b-880c-ef7b00599827",
+      "name": "Delivery/Read/Reply Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2880,
+        208
+      ],
+      "webhookId": "wf7-messaging-callback"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Grab root items from $json if not nested under body\nconst body = $json.body || $json;\nconst query = $json.query || {};\nconst params = $json.params || {};\n\nlet out = {\n  message_id: body.messageId || query.message_id || params.id || null,\n  channel: body.channel || query.channel || 'Email',\n  status_type: body.type || query.status_type || 'delivery',\n  status_value: body.status || query.status_value || 'Delivered',\n  timestamp: new Date().toISOString(),\n  reply_text: body.replyText || query.reply_text || null,\n  params: params,\n  query: query\n};\n\n// Existing WhatsApp / Twilio / Gmail conditional checks follow below...\nif (body.entry) {\n  out.channel = 'WhatsApp';\n  const change = body.entry[0]?.changes?.[0]?.value;\n  if (change?.statuses) {\n    const s = change.statuses[0];\n    out.message_id = s.id;\n    out.status_type = 'delivery';\n    out.status_value = s.status === 'delivered' ? 'Delivered' : (s.status === 'read' ? 'Read' : s.status === 'failed' ? 'Failed' : s.status);\n    out.timestamp = new Date(parseInt(s.timestamp, 10) * 1000).toISOString();\n    if (s.status === 'read') out.status_type = 'read';\n  } else if (change?.messages) {\n    const m = change.messages[0];\n    out.message_id = m.context?.id || m.id;\n    out.status_type = 'reply';\n    out.status_value = 'Replied';\n    out.reply_text = m.text?.body || '';\n    out.timestamp = new Date(parseInt(m.timestamp, 10) * 1000).toISOString();\n  }\n} else if (body.SmsSid || body.MessageSid) {\n  out.channel = 'SMS';\n  out.message_id = body.MessageSid || body.SmsSid;\n  if (body.Body) {\n    out.status_type = 'reply';\n    out.status_value = 'Replied';\n    out.reply_text = body.Body;\n  } else {\n    out.status_type = 'delivery';\n    out.status_value = body.MessageStatus === 'delivered' ? 'Delivered' : body.MessageStatus === 'failed' ? 'Failed' : body.MessageStatus;\n  }\n} else if (body.messageId && body.channel === 'Email') {\n  out.channel = 'Email';\n  out.message_id = body.messageId;\n  out.status_type = body.type || 'delivery';\n  out.status_value = body.status || 'Delivered';\n  out.reply_text = body.replyText || null;\n}\n\n// Return in correct n8n format\nreturn [{ json: out }];"
+      },
+      "id": "5411b7c1-e301-4980-ab19-3aead0876187",
+      "name": "Normalize Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2640,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1956618426,
+          "mode": "list",
+          "cachedResultName": "Messaging Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1956618426"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('Delivery/Read/Reply Webhook').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5b5982f7-c08a-4bff-b129-f53cbe94bd77",
+      "name": "Lookup Message + Dedupe Check",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2400,
+        208
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dedupe-cond",
+              "leftValue": "={{ $('Normalize Payload').item.json.status_type === 'delivery' ? ($json.delivery_status !== $('Normalize Payload').item.json.status_value) : ($('Normalize Payload').item.json.status_type === 'read' ? ($json.read_status !== 'TRUE' && $json.read_status !== true) : ($json.reply_status !== 'TRUE' && $json.reply_status !== true)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1fec99b5-30e2-4ba3-924e-f31a543aebc4",
+      "name": "IF Not Already Logged",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2160,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1956618426,
+          "mode": "list",
+          "cachedResultName": "Messaging Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1956618426"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message_id": "={{ $json.message_id }}",
+            "delivery_status": "={{ $('Normalize Payload').item.json.status_type === 'delivery' ? $('Normalize Payload').item.json.status_value : ($('Normalize Payload').item.json.status_type === 'reply' ? 'Delivered' : $json.delivery_status) }}",
+            "read_status": "={{ $('Normalize Payload').item.json.status_type === 'read' || $('Normalize Payload').item.json.status_type === 'reply' ? 'TRUE' : ($json.read_status || '') }}",
+            "reply_status": "={{ $('Normalize Payload').item.json.status_type === 'reply' ? 'TRUE' : ($json.reply_status || '') }}",
+            "reply_text": "={{ $('Normalize Payload').item.json.status_type === 'reply' ? $('Normalize Payload').item.json.reply_text : ($json.reply_text || '') }}",
+            "lead_id": "={{ $json.lead_id }}",
+            "message_number": "={{ $json.message_number }}",
+            "channel": "={{ $json.channel }}",
+            "template_id": "={{ $json.template_id }}",
+            "retry_count": "={{ $json.retry_count }}",
+            "sent_at": "={{ $json.sent_at }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "recipient_phone": "={{ $json.recipient_phone }}",
+            "recipient_email": "={{ $json.recipient_email }}",
+            "message_body": "={{ $json.message_body }}"
+          },
+          "matchingColumns": [
+            "message_id"
+          ],
+          "schema": [
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message_number",
+              "displayName": "message_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "messaging_status",
+              "displayName": "messaging_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "read_status",
+              "displayName": "read_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reply_status",
+              "displayName": "reply_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reply_text",
+              "displayName": "reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "retry_count",
+              "displayName": "retry_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recipient_phone",
+              "displayName": "recipient_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recipient_email",
+              "displayName": "recipient_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message_body",
+              "displayName": "message_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "2f8b08f1-645c-4e07-a935-0a8bfa75ae32",
+      "name": "Update Messaging Log Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1920,
+        96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1693313319,
+          "mode": "list",
+          "cachedResultName": "Audit Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1693313319"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $('Normalize Payload').item.json.timestamp }}",
+            "lead_id": "={{ $json.lead_id }}",
+            "event": "Webhook Received",
+            "status": "={{ $('Normalize Payload').item.json.status_value }}",
+            "channel": "={{ $('Normalize Payload').item.json.channel }}",
+            "message_id": "={{ $('Normalize Payload').item.json.message_id }}",
+            "details": "={{ $('Normalize Payload').item.json.reply_text || '' }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event",
+              "displayName": "event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "details",
+              "displayName": "details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "488f3b87-9f58-47aa-916e-881be14c0788",
+      "name": "Append Audit Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1680,
+        96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-reply",
+              "leftValue": "={{ $('Normalize Payload').item.json.status_type }}",
+              "rightValue": "=reply {{ $json.timestamp }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "2e72852a-0273-4cd1-9ad8-3a859eb47441",
+              "leftValue": "={{ $json.channel }}",
+              "rightValue": "={{ $json.channel }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "a76cc52e-3a44-42c0-a701-3496fc82c02c",
+              "leftValue": "={{ $json.details }}",
+              "rightValue": "={{ $json.details }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "772f053e-cd62-4086-9fe3-58916e4b2ee9",
+      "name": "IF Is Reply",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1440,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "w8bwsaSG8lR8Pzx3",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/w8bwsaSG8lR8Pzx3",
+          "cachedResultName": "WF9 — Decision Engine 22"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "triggering_event": "reply",
+            "lead_id": "={{ $json.lead_id }}",
+            "reply_text": "={{ $('Normalize Payload').item.json.reply_text }}",
+            "outcome": "Replied",
+            "source_workflow": "WF7"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "triggering_event",
+              "displayName": "triggering_event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "reply_text",
+              "displayName": "reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "source_workflow",
+              "displayName": "source_workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "bf4907ca-0e41-4546-8552-39579827079a",
+      "name": "Execute WF9 - Decision Engine",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1184,
+        16
+      ]
+    }
+  ],
+  "pinData": {
+    "Delivery/Read/Reply Webhook": [
+      {
+        "json": {
+          "messageId": "1786120399047_Malik Marble and Granite",
+          "lead_id": "Malik Marble and Granite",
+          "outcome": "Read but no reply",
+          "triggering_event": "wait_period_elapsed",
+          "reply_text": null,
+          "source_workflow": "WF6"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Delivery/Read/Reply Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Payload": {
+      "main": [
+        [
+          {
+            "node": "Lookup Message + Dedupe Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Message + Dedupe Check": {
+      "main": [
+        [
+          {
+            "node": "IF Not Already Logged",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Not Already Logged": {
+      "main": [
+        [
+          {
+            "node": "Update Messaging Log Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Messaging Log Row": {
+      "main": [
+        [
+          {
+            "node": "Append Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Audit Log": {
+      "main": [
+        [
+          {
+            "node": "IF Is Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Is Reply": {
+      "main": [
+        [
+          {
+            "node": "Execute WF9 - Decision Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2c1db3c2-fd99-48e2-a40b-22b85ffe70ec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b306457276a81e33e9c2d7bd74063f36caaef0e7cf8611eee8b3332bb2dd71e"
+  },
+  "nodeGroups": [],
+  "id": "H8j3tpA8qkTBczTS",
+  "tags": []
+}
