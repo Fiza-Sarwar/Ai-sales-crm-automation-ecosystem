@@ -1,0 +1,367 @@
+{
+  "name": "Follow Up Daily reminder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        144
+      ],
+      "id": "a634449d-1bc9-477e-9f28-0d33d61b397d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1676405747,
+          "mode": "list",
+          "cachedResultName": "call_outcomes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1676405747"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -672,
+        144
+      ],
+      "id": "71578f7c-fcef-4f9e-8274-b55539622307",
+      "name": "Google Sheets (Read Follow-ups)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        144
+      ],
+      "id": "492a4da6-2670-4d4a-96aa-4a53110ca8b3",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4a605c15-44a5-4eb5-910b-cb6354b8eee1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        80
+      ],
+      "id": "d16b4a93-7da2-4dde-b848-69856e7affd9",
+      "name": "IF (Succeeded?)"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 603432392,
+          "mode": "list",
+          "cachedResultName": "Error_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=603432392"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company": "={{ $('Loop Over Items').item.json['Company name'] }}",
+            "Intern": "={{ $('Loop Over Items').item.json['Intern name'] }}",
+            "Attempted_Email": "={{ $('Loop Over Items').item.json['Email'] }}",
+            "Error_Message": "={{ $json.error }}",
+            "Timestamp": "={{ $now.toFormat('dd-MM-yyyy hh:mm a') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intern",
+              "displayName": "Intern",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attempted_Email",
+              "displayName": "Attempted_Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error_Message",
+              "displayName": "Error_Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        144
+      ],
+      "id": "c2bb8a14-9e10-4884-b408-e7b30f659083",
+      "name": "Google Sheets (Log Error)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "=Follow-up Reminder: {{ $json['Company name'] }}",
+        "message": "=<h2>Follow-up Reminder</h2>\n<p>Hi {{ $json['Intern name'] }},</p>\n<p>You have a follow-up call due today with <b>{{ $json['Company name'] }}</b> (City: {{ $json.City }}).</p>\n<p><b>Phone Number to Call:</b> {{ $json.PhoneNumbers || 'Not Provided' }}</p>\n<p><b>Follow-up was scheduled for:</b> {{ $json.FollowupDate }}</p>\n<p><b>Notes from last call:</b><br>{{ $json.Notes }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d8c09184-f5b1-4df7-946e-4f93685f37af",
+      "name": "Send a message",
+      "webhookId": "01cf7b7a-3ae8-4ad3-95d0-077fb60cc4b4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "owB1ZneihHpn12KW",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "88f9cdf0-4378-4138-8fa3-6a089eb90fdd",
+              "leftValue": "={{ $json.FollowupDate }}",
+              "rightValue": "empty",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "a33dd893-a4c1-4e8b-bd2c-fb5a60e2e468",
+              "leftValue": "={{ new Date($json.FollowupDate) <= new Date() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        144
+      ],
+      "id": "ae5007d8-8f18-4304-aa74-ad4cc594a911",
+      "name": "Filter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Read Follow-ups)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Read Follow-ups)": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF (Succeeded?)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets (Log Error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Log Error)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "IF (Succeeded?)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d00b9032-9e92-4cfb-9e43-2723c2d88398",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b306457276a81e33e9c2d7bd74063f36caaef0e7cf8611eee8b3332bb2dd71e"
+  },
+  "nodeGroups": [],
+  "id": "76ZYQjJ0bjsjAbkG",
+  "tags": []
+}
