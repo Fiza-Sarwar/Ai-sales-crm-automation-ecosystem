@@ -1,0 +1,539 @@
+{
+  "name": "WF10 - Messaging Analytics",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "id": "d38d7a9d-a408-4022-bd70-dc0fe48ace65",
+      "name": "Node 1 - Daily Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1344,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "sunday-check",
+              "leftValue": "={{ $now.weekday === 7 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "37d05333-83bd-4807-9378-98a1b0c28dc6",
+      "name": "Is Weekly Run? (Sunday)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1104,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1956618426,
+          "mode": "list",
+          "cachedResultName": "Messaging Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1956618426"
+        },
+        "options": {}
+      },
+      "id": "a2ac00f2-14fb-4db2-844f-22240a6c0605",
+      "name": "Node 2 - Read Messaging Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -880,
+        80
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json);\n\n// --------------------\n// Filter to today's messages only\n// --------------------\nconst today = new Date().toISOString().split('T')[0]; // e.g. \"2026-08-07\"\n\nconst todayRows = rows.filter(row => {\n  const rawDate = row['sent_at'] || row['updated_at'] || '';\n  if (!rawDate || rawDate.toString().trim() === '') return false;\n  try {\n    const sentDate = new Date(rawDate).toISOString().split('T')[0];\n    return sentDate === today;\n  } catch(e) {\n    return false;\n  }\n});\n\n// --------------------\n// DEBUG: log how many rows matched (remove after testing)\n// --------------------\nconsole.log(`Total rows in sheet: ${rows.length}`);\nconsole.log(`Rows matching today (${today}): ${todayRows.length}`);\nif (rows.length > 0) {\n  console.log(`Sample sent_at value: \"${rows[0]['sent_at']}\"`);\n}\n\n// --------------------\n// Remove duplicate message_ids\n// --------------------\nconst uniqueMessages = new Map();\n\nfor (const row of todayRows) {\n  if (!row.message_id) continue;\n  const existing = uniqueMessages.get(row.message_id);\n  if (!existing) {\n    uniqueMessages.set(row.message_id, row);\n    continue;\n  }\n  if (new Date(row.updated_at || row.sent_at) > new Date(existing.updated_at || existing.sent_at)) {\n    uniqueMessages.set(row.message_id, row);\n  }\n}\n\nconst deduped = [...uniqueMessages.values()];\n\n// --------------------\n// Aggregate by Channel\n// --------------------\nconst summary = {};\n\nfor (const row of deduped) {\n  const channel = row.channel || 'Unknown';\n\n  if (!summary[channel]) {\n    summary[channel] = {\n      channel,\n      total_messages: 0,\n      sent: 0,\n      delivered: 0,\n      read: 0,\n      replied: 0,\n      failed: 0,\n      retry_count: 0\n    };\n  }\n\n  const s = summary[channel];\n  s.total_messages++;\n  s.sent++;\n\n  if (\n    row.delivery_status === 'Delivered' ||\n    row.read_status === 'TRUE' || row.read_status === true ||\n    row.reply_status === 'TRUE' || row.reply_status === true\n  ) {\n    s.delivered++;\n  }\n\n  if (row.read_status === 'TRUE' || row.read_status === true ||\n      row.reply_status === 'TRUE' || row.reply_status === true) {\n    s.read++;\n  }\n\n  if (row.reply_status === 'TRUE' || row.reply_status === true ||\n      row.messaging_status === 'Active Conversation') {\n    s.replied++;\n  }\n\n  if (row.delivery_status === 'Failed') {\n    s.failed++;\n  }\n\n  s.retry_count += Number(row.retry_count || 0);\n}\n\n// --------------------\n// Calculate Rates\n// --------------------\nconst metrics = Object.values(summary).map(r => ({\n  ...r,\n  delivery_rate: r.sent ? +(r.delivered / r.sent * 100).toFixed(1) : 0,\n  read_rate: r.delivered ? +(r.read / r.delivered * 100).toFixed(1) : 0,\n  reply_rate: r.read ? +(r.replied / r.read * 100).toFixed(1) : 0\n}));\n\n// If no data today, return a placeholder so downstream nodes don't crash\nif (metrics.length === 0) {\n  return [{\n    json: {\n      rawRows: [],\n      metrics: [],\n      noDataToday: true,\n      today\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    rawRows: deduped,\n    metrics,\n    noDataToday: false,\n    today\n  }\n}];"
+      },
+      "id": "5ff44250-1e3b-4244-9f23-e77a1bb135e1",
+      "name": "Node 3 - Compute Raw Counts (Day / Intern / Channel)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { metrics, rawRows } = $input.first().json;\n\n// Helper\nconst percent = (value, total) =>\n  total > 0 ? Number(((value / total) * 100).toFixed(1)) : 0;\n\nconst metricsRows = metrics.map(row => ({\n  ...row,\n  deliveryRatePct: percent(row.delivered, row.sent),\n  readRatePct: percent(row.read, row.delivered),\n  replyRatePct: percent(row.replied, row.read),\n  failureRatePct: percent(row.failed, row.sent),\n  retryAverage: row.sent > 0 ? Number((row.retry_count / row.sent).toFixed(2)) : 0\n}));\n\nreturn [{\n  json: {\n    metricsRows,\n    rawRows\n  }\n}];"
+      },
+      "id": "4372ccff-129a-4944-beed-044b8fe44732",
+      "name": "Node 4 - Compute Rates & Avg Response Time",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { metricsRows = [], rawRows = [] } = $input.first().json;\n\nconst summary = metricsRows.reduce((acc, row) => {\n  acc.totalMessages += row.total_messages || 0;\n  acc.sent += row.sent || 0;\n  acc.delivered += row.delivered || 0;\n  acc.read += row.read || 0;\n  acc.replied += row.replied || 0;\n  acc.failed += row.failed || 0;\n  acc.retryCount += row.retry_count || 0;\n  return acc;\n}, {\n  totalMessages: 0,\n  sent: 0,\n  delivered: 0,\n  read: 0,\n  replied: 0,\n  failed: 0,\n  retryCount: 0\n});\n\nconst deliveryRate = summary.sent ? Number((summary.delivered / summary.sent * 100).toFixed(1)) : 0;\nconst readRate = summary.delivered ? Number((summary.read / summary.delivered * 100).toFixed(1)) : 0;\nconst replyRate = summary.read ? Number((summary.replied / summary.read * 100).toFixed(1)) : 0;\n\n// Friday = 5 for testing, change to 0 for Sunday in production\nconst isWeeklyRun = new Date().getDay() === 5;\n\nreturn [{\n  json: {\n    date: new Date().toISOString().split('T')[0],\n    total_messages: summary.totalMessages,\n    sent: summary.sent,\n    delivered: summary.delivered,\n    read: summary.read,\n    replied: summary.replied,\n    failed: summary.failed,\n    delivery_rate: deliveryRate,\n    read_rate: readRate,\n    reply_rate: replyRate,\n    isWeeklyRun,\n    metricsRows,\n    rawRows\n  }\n}];"
+      },
+      "id": "d46219d4-1de7-425a-a43d-d6c588c81ad5",
+      "name": "Node 5 - Follow-up Success Rate & Stale Flags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 783064551,
+          "mode": "list",
+          "cachedResultName": "Messaging Metrics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=783064551"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $json.date }}",
+            "total_messages": "={{ $json.total_messages }}",
+            "sent": "={{ $json.sent }}",
+            "delivered": "={{ $json.delivered }}",
+            "read": "={{ $json.read }}",
+            "replied": "={{ $json.replied }}",
+            "failed": "={{ $json.failed }}",
+            "delivery_rate": "={{ $json.delivery_rate }}%",
+            "read_rate": "={{ $json.read_rate }}%",
+            "reply_rate": "={{ $json.reply_rate }}%"
+          },
+          "matchingColumns": [
+            "date"
+          ],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_messages",
+              "displayName": "total_messages",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent",
+              "displayName": "sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivered",
+              "displayName": "delivered",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "read",
+              "displayName": "read",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "replied",
+              "displayName": "replied",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "failed",
+              "displayName": "failed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_rate",
+              "displayName": "delivery_rate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "read_rate",
+              "displayName": "read_rate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reply_rate",
+              "displayName": "reply_rate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "7d37a348-596f-4e42-b6cd-bb9386194760",
+      "name": "Node 6 - Write to Dashboard Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "weekly-run-gate",
+              "leftValue": "={{ $json.isWeeklyRun }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dde043f6-534c-4ee4-ad2b-d7f430b95131",
+      "name": "Is Weekly Run? (gate before Node 7)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const metricsRows = $items('Node 4 - Compute Rates & Avg Response Time')[0].json.metricsRows;\nconst dashboardData = $items('Node 5 - Follow-up Success Rate & Stale Flags')[0].json;\n\nconst escapeHtml = (text = \"\") =>\n  String(text)\n    .replace(/&/g, \"&amp;\")\n    .replace(/</g, \"&lt;\")\n    .replace(/>/g, \"&gt;\")\n    .replace(/\"/g, \"&quot;\")\n    .replace(/'/g, \"&#039;\");\n\nconst channelRows = metricsRows.map(c => `\n<tr>\n  <td>${escapeHtml(c.channel)}</td>\n  <td align=\"center\">${c.sent}</td>\n  <td align=\"center\">${c.delivered}</td>\n  <td align=\"center\">${c.read}</td>\n  <td align=\"center\">${c.replied}</td>\n  <td align=\"center\" style=\"font-weight:bold\">${c.reply_rate.toFixed(1)}%</td>\n</tr>\n`).join(\"\");\n\nconst html = `\n<div style=\"font-family:Arial,sans-serif;font-size:14px;\">\n  <h2 style=\"margin-bottom:15px;\">📊 Messaging Dashboard (Last 7 Days)</h2>\n  <table style=\"width:100%;border-collapse:collapse;border:1px solid #ddd;\">\n    <thead style=\"background:#f3f4f6;\">\n      <tr>\n        <th style=\"padding:8px\">Channel</th>\n        <th>Sent</th>\n        <th>Delivered</th>\n        <th>Read</th>\n        <th>Replied</th>\n        <th>Reply Rate</th>\n      </tr>\n    </thead>\n    <tbody>\n      ${channelRows}\n    </tbody>\n  </table>\n  <br>\n  <div style=\"background:#f8fafc;padding:15px;border:1px solid #ddd;border-radius:6px;\">\n    <p><strong>📨 Total Messages:</strong> ${dashboardData.total_messages}</p>\n    <p><strong>📦 Delivery Rate:</strong> ${dashboardData.delivery_rate}%</p>\n    <p><strong>👀 Read Rate:</strong> ${dashboardData.read_rate}%</p>\n    <p><strong>💬 Reply Rate:</strong> ${dashboardData.reply_rate}%</p>\n  </div>\n</div>\n`;\n\nreturn [{\n  json: {\n    messagingSectionHtml: html\n  }\n}];"
+      },
+      "id": "90623152-cba5-454f-8a66-6ce6093c79fd",
+      "name": "Node 7 - Build Weekly Messaging HTML Section",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        192
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "36c11b95-1e81-4b70-b325-0bed4cab3479",
+      "name": "Handoff to WF5 Weekly Email",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "=sahmad.sa123@gmail.com",
+        "subject": "=Weekly Messaging Analytics Report - {{ $now.format('dd MMM yyyy') }}",
+        "message": "={{ $('Node 7 - Build Weekly Messaging HTML Section').item.json.messagingSectionHtml }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        336
+      ],
+      "id": "572ef39e-205e-4a59-aeee-90987832c659",
+      "name": "Send a message",
+      "webhookId": "4ce53455-fabc-47da-be36-57d0356a5194",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "36zHU333zxlP4Mko",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1676405747,
+          "mode": "list",
+          "cachedResultName": "call_outcomes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1676405747"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        192
+      ],
+      "id": "39dfad4e-32a0-42b3-9e0f-df61b6d57fa2",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst uniqueEmails = new Set();\n\nfor (const row of rows) {\n  if (row['Email']) uniqueEmails.add(row['Email'].trim());\n}\n\n// Add company seniors\nuniqueEmails.add('danial.wajahat@datafunction.ca');\nuniqueEmails.add('dawood.cheema@datafunction.ca');\nuniqueEmails.add('junaid.cheema@datafunction.ca');\n\nreturn [{ json: { emailList: Array.from(uniqueEmails).join(', ') } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        192
+      ],
+      "id": "2ae1e85a-70a5-4bc1-827c-23a1e87cb0bb",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Node 1 - Daily Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Weekly Run? (Sunday)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Weekly Run? (Sunday)": {
+      "main": [
+        [
+          {
+            "node": "Node 2 - Read Messaging Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Node 2 - Read Messaging Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 2 - Read Messaging Log": {
+      "main": [
+        [
+          {
+            "node": "Node 3 - Compute Raw Counts (Day / Intern / Channel)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 3 - Compute Raw Counts (Day / Intern / Channel)": {
+      "main": [
+        [
+          {
+            "node": "Node 4 - Compute Rates & Avg Response Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 4 - Compute Rates & Avg Response Time": {
+      "main": [
+        [
+          {
+            "node": "Node 5 - Follow-up Success Rate & Stale Flags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 5 - Follow-up Success Rate & Stale Flags": {
+      "main": [
+        [
+          {
+            "node": "Node 6 - Write to Dashboard Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Weekly Run? (gate before Node 7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Weekly Run? (gate before Node 7)": {
+      "main": [
+        [
+          {
+            "node": "Node 7 - Build Weekly Messaging HTML Section",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 7 - Build Weekly Messaging HTML Section": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "02eab3ba-0153-4648-8921-b303fe108161",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b306457276a81e33e9c2d7bd74063f36caaef0e7cf8611eee8b3332bb2dd71e"
+  },
+  "nodeGroups": [],
+  "id": "cJrTfGopvORkMMzg",
+  "tags": []
+}
