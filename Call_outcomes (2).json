@@ -1,0 +1,429 @@
+{
+  "name": "Call_outcomes",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Call_Outcomes",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Intern",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Company_name",
+              "fieldType": "textarea",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Followup_date",
+              "fieldType": "date"
+            },
+            {
+              "fieldLabel": "Outcome",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Interested"
+                  },
+                  {
+                    "option": "not_interested"
+                  },
+                  {
+                    "option": "Call back"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "City",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone Number",
+              "fieldType": "number",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "edca9060-d2d6-477b-be63-ab9dcdb99512",
+      "name": "On form submission",
+      "webhookId": "9a29ea6c-6e18-46eb-8b28-968815abe138"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-lite-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-lite-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a sales summary assistant. Based on the call notes provided, generate a concise 2-sentence summary for the sales log.\n\nCall Information:\n- Outcome: {{$json.Call_Outcome}}\n- Call Notes: {{$json.Notes}}\n- Follow-up Date: {{$json.Follow_Up_Date}}\n\nRequirements:\n1. First sentence: Summarize the main outcome and company interest level\n2. Second sentence: Mention the next action and follow-up date\n3. Keep it professional and concise\n4. Use active voice\n5. Include any key objections or requirements mentioned\n\nGenerate only the 2-sentence summary, nothing else."
+            }
+          ]
+        },
+        "simplify": false,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "c7deddab-e025-429f-8242-233879e03fe3",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "l335AMlh7gIeA0uv",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": "Copy of Official Copy of Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1676405747,
+          "mode": "list",
+          "cachedResultName": "call_outcomes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1676405747"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Intern name": "={{ $('On form submission').item.json.Intern }}",
+            "Outcomes": "={{ $('On form submission').item.json.Outcome }}",
+            "Company name": "={{ $('On form submission').item.json.Company_name }}",
+            "City": "={{ $('On form submission').item.json.City }}",
+            "Notes": "={{ $('Message a model').item.json.candidates[0].content.parts[0].text }}",
+            "CallDate": "={{ $now.format('yyyy-MM-dd') }}",
+            "FollowupDate": "={{ $('On form submission').item.json.Followup_date }}",
+            "Email": "={{ $('On form submission').item.json.Email }}",
+            "PhoneNumbers": "={{ $('On form submission').item.json['Phone Number'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "CallDate",
+              "displayName": "CallDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Intern name",
+              "displayName": "Intern name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Outcomes",
+              "displayName": "Outcomes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company name",
+              "displayName": "Company name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "City",
+              "displayName": "City",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FollowupDate",
+              "displayName": "FollowupDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PhoneNumbers",
+              "displayName": "PhoneNumbers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        848,
+        0
+      ],
+      "id": "dce3db26-be50-48c3-9776-63575727eebf",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "fizasarwar388@gmail.com",
+        "subject": "=New Lead Update:{{ $('On form submission').item.json.Company_name }}  - {{ $('On form submission').item.json.Outcome }}",
+        "message": "=<h2>Call Outcome Notification</h2>  <p><strong>Company:{{ $('On form submission').item.json.Company_name }}</strong> </p> <p><strong>Contact Person:</strong>{{ $('On form submission').item.json.Intern }} </p> <p><strong>Call Outcome:</strong>{{ $('On form submission').item.json.Outcome }} <span style=\"color: #4CAF50; font-weight: bold;\"></span></p> <p><strong>Call Date:</strong> {{ $('On form submission').item.json.Followup_date }}</p>  <p><strong>Phone Number:{{ $('On form submission').item.json['Phone Number'] }}</strong> </p>  <hr>  <h3>Summary:</h3> <p>{{ $('Message a model').item.json.candidates[0].content.parts[0].text }}</p>  <hr>  ",
+        "options": {
+          "ccList": "danial.wajahat@datafunction.ca, dawood.cheema@datafunction.ca"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1056,
+        0
+      ],
+      "id": "be4bc5b5-10c2-4027-ad16-7a2ea23c7ed9",
+      "name": "Send a message",
+      "webhookId": "f8a0813b-6408-42cd-a768-ae63ae21dc9e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "owB1ZneihHpn12KW",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": "Copy of Official Copy of Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1676405747,
+          "mode": "list",
+          "cachedResultName": "call_outcomes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1676405747"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Company name",
+              "lookupValue": "={{ $('On form submission').item.json.Company_name }}"
+            },
+            {
+              "lookupColumn": "City",
+              "lookupValue": "={{ $('On form submission').item.json.City }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        0
+      ],
+      "id": "d925a2e8-937a-4ee6-916e-092ea9feb6d3",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e2d49aa-c060-4af5-a1d7-8376b1decf53",
+              "leftValue": "={{ $('Get row(s) in sheet').item.json.row_number }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "7e27606b-3d99-4d9b-ba82-2fc2d7c38a39",
+      "name": "Filter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "33575872-cb2e-4934-ab8a-63795cfcb257",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7b306457276a81e33e9c2d7bd74063f36caaef0e7cf8611eee8b3332bb2dd71e"
+  },
+  "nodeGroups": [],
+  "id": "7OP97CoJ5LiiJzOX",
+  "tags": []
+}
