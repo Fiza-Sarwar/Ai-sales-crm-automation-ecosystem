@@ -1,0 +1,521 @@
+{
+  "name": "WF 6.5 Message Delivery Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        240,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "cachedResultName": " Official  Marble Factories Detials"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1956618426,
+          "mode": "list",
+          "cachedResultName": "Messaging Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1956618426"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "message_id",
+              "lookupValue": "=={{ $json.message_id }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "767e4e93-2a31-49e3-9ffd-323240a19192",
+      "name": "Google Sheets (Read Pending Message)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        464,
+        544
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "WhatsApp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ea5432a4-28a7-4cee-b960-3d3fb9e864de"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "WhatsApp"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "SMS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3447ec70-0c72-4bb8-bb3f-fa1fbeadf924"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SMS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "Email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "bb843b90-b45f-4659-ab75-4f5870c85f61"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7de467b5-34c2-4da0-a92e-16e5e792b4ba",
+      "name": "Switch (Check Channel)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "from": "<__PLACEHOLDER_VALUE__Twilio WhatsApp sender number (e.g. whatsapp:+14155238886)__>",
+        "to": "={{ $json.recipient_phone }}",
+        "toWhatsapp": true,
+        "message": "={{ $json.message_body }}",
+        "options": {}
+      },
+      "id": "0ab46970-5798-4a13-8d26-682d975e6fe7",
+      "name": "Twilio (Send WhatsApp)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        912,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "cachedResultName": " Official  Marble Factories Detials"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Messaging Log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message_id": "={{ $('Google Sheets (Read Pending Message)').item.json.message_id }}",
+            "delivery_status": "Delivered",
+            "messaging_status": "Sent",
+            "row_number": 0,
+            "updated_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "message_id"
+          ],
+          "schema": [
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message_number",
+              "displayName": "message_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "messaging_status",
+              "displayName": "messaging_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "read_status",
+              "displayName": "read_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reply_status",
+              "displayName": "reply_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reply_text",
+              "displayName": "reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "retry_count",
+              "displayName": "retry_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recipient_phone",
+              "displayName": "recipient_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recipient_email",
+              "displayName": "recipient_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message_body",
+              "displayName": "message_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "6e878be9-7eb8-472b-8449-cd0683ee1be6",
+      "name": "Google Sheets (Update Log Status)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1136,
+        544
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "<__PLACEHOLDER_VALUE__Twilio SMS sender number/ID (e.g. +14155551234)__>",
+        "to": "={{ $json.recipient_phone }}",
+        "message": "={{ $json.message_body }}",
+        "options": {}
+      },
+      "id": "eb804c53-31fb-4558-9b20-67d0155af45e",
+      "name": "Twilio (Send SMS)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        912,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.recipient_email }}",
+        "subject": "=Marble Sourcing — Follow Up",
+        "emailType": "text",
+        "message": "={{ $json.message_body }}",
+        "options": {}
+      },
+      "id": "2b60f07c-d0c3-403f-b43b-a2d825389235",
+      "name": "Gmail (Send Email)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        736
+      ],
+      "webhookId": "feefe300-dcd6-4e75-b911-cdecab55dfe7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "OBm43xi1cz0dn6oo",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Read Pending Message)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Read Pending Message)": {
+      "main": [
+        [
+          {
+            "node": "Switch (Check Channel)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch (Check Channel)": {
+      "main": [
+        [
+          {
+            "node": "Twilio (Send WhatsApp)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Twilio (Send SMS)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail (Send Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio (Send WhatsApp)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Update Log Status)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio (Send SMS)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Update Log Status)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail (Send Email)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Update Log Status)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "64eaf9d8-0d1c-4c9b-a209-f5a4502e699e",
+  "meta": {
+    "instanceId": "7b306457276a81e33e9c2d7bd74063f36caaef0e7cf8611eee8b3332bb2dd71e"
+  },
+  "nodeGroups": [],
+  "id": "IjAXV40aWU9vudpL",
+  "tags": []
+}
