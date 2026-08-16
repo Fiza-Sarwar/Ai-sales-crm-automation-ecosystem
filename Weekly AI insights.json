@@ -1,0 +1,218 @@
+{
+  "name": "Weekly AI insights",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1024,
+        96
+      ],
+      "id": "e46f36e8-2d0d-4639-be19-00407a4d8eaa",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1676405747,
+          "mode": "list",
+          "cachedResultName": "call_outcomes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1676405747"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -800,
+        96
+      ],
+      "id": "641619d1-7755-4035-befd-02fae3f3827e",
+      "name": "Google Sheets (Read Call Logs)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve all incoming call log items from Google Sheets\nconst logs = $input.all();\n\nlet callCount = logs.length;\nlet outcomes = {};\nlet internStats = {};\nlet notesSummary = [];\nlet uniqueEmails = new Set(); // Using a Set to collect only UNIQUE emails\n\nfor (let log of logs) {\n  const data = log.json;\n  \n  // Tally overall outcomes (Interested, Converted, etc.)\n  const outcome = data['Outcomes'] || 'Unknown';\n  outcomes[outcome] = (outcomes[outcome] || 0) + 1;\n  \n  // Tally intern metrics (who made how many calls)\n  const intern = data['Intern name'] || 'Unknown';\n  internStats[intern] = (internStats[intern] || 0) + 1;\n  \n  // Collect unique emails from the sheet\n  if (data['Email']) {\n    uniqueEmails.add(data['Email'].trim());\n  }\n  \n  // Collect clean, compressed notes\n  notesSummary.push(`- Intern: ${intern} | Company: ${data['Company name']} | Outcome: ${outcome} | Notes: ${data['Notes']}`);\n}\n\n// Format the final compressed object to send to Gemini\nconst compressedData = {\n  total_calls_logged: callCount,\n  outcome_distribution: outcomes,\n  intern_call_volume: internStats,\n  individual_call_telemetry: notesSummary.join(\"\\n\"),\n  intern_email_list: Array.from(uniqueEmails).join(\", \") // Converts set back to a clean list of emails separated by commas\n};\n\nreturn [{ json: compressedData }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        96
+      ],
+      "id": "a1687d65-9d2f-43eb-b520-8b8ac18f0db6",
+      "name": "Code (Compress Logs for AI)"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-lite-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-lite-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a senior sales operations analyst. Given this week's aggregated call data (JSON) below, identify and generate a report covering:\n1. **BEST-PERFORMING INTERN (BY CONVERSION RATE)**\n2. **BEST-PERFORMING CITY AND INDUSTRY**\n3. **MOST COMMON REJECTION REASONS (FROM NOTES)**\n4. **MOST COMMON CUSTOMER REQUIREMENTS (FROM NOTES)**\n5. **THREE SUGGESTED NEXT ACTIONS FOR THE TEAM**\n\nCRITICAL FORMATTING RULES:\n- Use double-asterisks (**) around section headers to make them bold (e.g., **1. HEADER**).\n- Do not use hashes (###).\n- Use clean spacing and empty lines between sections.\n- Use standard dashes (-) for bullet points.\n\nAggregated Weekly Data:\n{{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -352,
+        96
+      ],
+      "id": "b6277a5b-5b7d-4e6a-8962-43cdc0b36de7",
+      "name": "Google Gemini (Analyze Weekly Trends)",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "l335AMlh7gIeA0uv",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BGU7HMKCP",
+          "mode": "list",
+          "cachedResultName": "executive-insights"
+        },
+        "text": "={{ $json.content.parts[0].text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fb59c88f-bdc5-4b40-b5a4-8eed9d4bed9e",
+      "name": "Slack (Post Weekly Executive Card)",
+      "webhookId": "53e9a4fe-8bb9-4397-b6c7-8c541ebe2e91"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Code (Compress Logs for AI)').item.json.intern_email_list }}, danial.wajahat@datafunction.ca, dawood.cheema@datafunction.ca, junaid.cheema@datafunction.ca",
+        "subject": "Weekly AI Sales Operations & Insights Report",
+        "message": "=<div style=\"font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; width: 100%; margin: 0; padding: 20px 0; color: #1e293b; background-color: #ffffff;\">\n  \n  <!-- Brand Header (Left-aligned & Full Width) -->\n  <div style=\"text-align: left; margin-bottom: 25px;\">\n    <span style=\"background-color: #eff6ff; color: #1e40af; font-size: 10px; font-weight: bold; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 1px;\">\n      Sales Operations Intelligence\n    </span>\n    <h1 style=\"color: #0f172a; font-size: 24px; font-weight: 800; margin-top: 12px; margin-bottom: 5px; letter-spacing: -0.5px;\">\n      Weekly Performance & CRM Insights\n    </h1>\n    <p style=\"font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 0;\">\n      Official Weekly Operations Digest • Google Sheets CRM Analytics\n    </p>\n  </div>\n  \n  <div style=\"border-top: 2px solid #f1f5f9; margin-bottom: 25px;\"></div>\n  \n  <!-- Main AI Content Container (Full Width & Left Aligned) -->\n  <div style=\"font-size: 14.5px; line-height: 1.8; color: #334155; text-align: left;\">\n    {{ $json.content.parts[0].text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong style=\"color: #0f172a; display: block; margin-top: 30px; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; border-left: 3px solid #3b82f6; padding-left: 12px;\">$1</strong>').replace(/\\n/g, '<br>') }}\n  </div>\n  \n  <!-- Professional Footer (Full Width & Left Aligned) -->\n  <div style=\"border-top: 1px solid #f1f5f9; margin-top: 40px; padding-top: 15px; text-align: left;\">\n    <p style=\"font-size: 11px; color: #94a3b8; margin-top: 0; margin-bottom: 5px;\">\n      This analytical digest was compiled and delivered automatically via <b>n8n Intelligence Pipeline</b>.\n    </p>\n    <p style=\"font-size: 10px; color: #cbd5e1; margin-top: 0; margin-bottom: 0; text-transform: uppercase; letter-spacing: 0.5px;\">\n      Confidential • Internal Sales Operations Only\n    </p>\n  </div>\n  \n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        192
+      ],
+      "id": "0dae79f6-4dc5-410e-a020-6ca0d92ca2f6",
+      "name": "Send a message",
+      "webhookId": "d84fdc97-f422-49ea-9c05-7751e57be522",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "owB1ZneihHpn12KW",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Read Call Logs)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Read Call Logs)": {
+      "main": [
+        [
+          {
+            "node": "Code (Compress Logs for AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (Compress Logs for AI)": {
+      "main": [
+        [
+          {
+            "node": "Google Gemini (Analyze Weekly Trends)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini (Analyze Weekly Trends)": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack (Post Weekly Executive Card)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "63443018-c440-488f-b07b-6e31ee243563",
+  "meta": {
+    "instanceId": "7b306457276a81e33e9c2d7bd74063f36caaef0e7cf8611eee8b3332bb2dd71e"
+  },
+  "nodeGroups": [],
+  "id": "woxcCoO24SpzTnpo",
+  "tags": []
+}
