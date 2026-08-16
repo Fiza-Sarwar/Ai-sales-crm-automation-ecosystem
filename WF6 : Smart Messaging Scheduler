@@ -1,0 +1,926 @@
+{
+  "name": "WF_6 Message Scheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -5200,
+        336
+      ],
+      "id": "0cab5168-3b56-4b0b-8744-a951da5fd150",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1643969921,
+          "mode": "list",
+          "cachedResultName": "Configuration Module",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1643969921"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -4976,
+        336
+      ],
+      "id": "fe044abc-2ad4-4f6a-a490-2c3d8893db85",
+      "name": "Google Sheets (Read Config)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1956618426,
+          "mode": "list",
+          "cachedResultName": "Messaging Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1956618426"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -4752,
+        336
+      ],
+      "id": "40ec0c4b-290c-4bdd-a8f9-3d6225989ab7",
+      "name": "Google Sheets (Lookup History)",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1676405747,
+          "mode": "list",
+          "cachedResultName": "call_outcomes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1676405747"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -4544,
+        336
+      ],
+      "id": "c988accc-aa0a-491e-b7f2-e0a716f64166",
+      "name": "Google Sheets (Lookup Intern Contact)",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Master_leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "Assigned"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -4320,
+        336
+      ],
+      "id": "74e9623b-7da8-4a46-aa1f-4aae1620b5fd",
+      "name": "Google Sheets (Read Active Leads)",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get lead data directly from the input stream\nconst lead = { ...$input.first().json };\n\n// Read ALL rows from Intern Contact sheet (call_outcomes)\nlet interns = [];\ntry {\n  interns = $items(\"Google Sheets (Lookup Intern Contact)\");\n} catch (e) {\n  interns = [];\n}\n\n// Match the correct intern case-insensitively\nconst assignedToName = String(lead.assigned_to).trim().toLowerCase();\nconst matchedIntern = interns.find(i => \n  i.json && \n  i.json[\"Intern name\"] && \n  String(i.json[\"Intern name\"]).trim().toLowerCase() === assignedToName\n);\n\nconst internContact = matchedIntern ? matchedIntern.json : {};\n\nlead.intern_whatsapp = internContact.PhoneNumbers || '923000000000';\nlead.intern_email    = internContact.Email || '';\n\n// Read ALL rows from Messaging Log\nlet history = [];\ntry {\n  history = $items(\"Google Sheets (Lookup History)\");\n} catch (e) {\n  history = [];\n}\n\n// Read dynamic wait periods from Configuration Module sheet\nlet waitPeriodMsg2 = 3; // Default fallback\nlet waitPeriodMsg3 = 4; // Default fallback\ntry {\n  const configRow = $node[\"Google Sheets (Read Config)\"].json || {};\n  waitPeriodMsg2 = parseInt(configRow.wait_period_msg2_days) || 3;\n  waitPeriodMsg3 = parseInt(configRow.wait_period_msg3_days) || 4;\n} catch (e) {\n  // If config read fails, default to spec standards (3 and 4 days)\n}\n\n// Filter to only this lead's rows\nconst currentLeadId = String(lead.title).trim().toLowerCase();\n\nconst validLogs = history.filter(h =>\n  h.json &&\n  h.json.message_id &&\n  String(h.json.lead_id).trim().toLowerCase() === currentLeadId\n);\n\nconst sentMessageNumbers = [...new Set(\n  validLogs.map(h => parseInt(h.json.message_number)).filter(n => !isNaN(n))\n)];\n\nconst highestSent = sentMessageNumbers.length > 0 ? Math.max(...sentMessageNumbers) : 0;\n\nlead.next_message_number = 4;\nlead.escalate_action = 'none';\n\nif (highestSent === 0) {\n  lead.next_message_number = 1;\n\n} else if (highestSent === 1) {\n  const logsForMsg1 = validLogs.filter(h => parseInt(h.json.message_number) === 1);\n  logsForMsg1.sort((a, b) => new Date(b.json.sent_at) - new Date(a.json.sent_at));\n  const lastMsg1 = logsForMsg1[0].json;\n  \n  const diffDays = Math.floor((new Date() - new Date(lastMsg1.sent_at)) / (1000 * 60 * 60 * 24));\n  \n  if (diffDays >= waitPeriodMsg2) {\n    const isRead = lastMsg1.read_status && String(lastMsg1.read_status).toLowerCase() !== 'false' && String(lastMsg1.read_status).trim() !== '';\n    const hasReplied = lastMsg1.reply_status && String(lastMsg1.reply_status).toLowerCase() !== 'false' && String(lastMsg1.reply_status).trim() !== '';\n    \n    if (isRead && !hasReplied) {\n      lead.escalate_action = 'Read but no reply';\n    } else if (!isRead && !hasReplied) {\n      lead.next_message_number = 2;\n    }\n  }\n\n} else if (highestSent === 2) {\n  const logsForMsg2 = validLogs.filter(h => parseInt(h.json.message_number) === 2);\n  logsForMsg2.sort((a, b) => new Date(b.json.sent_at) - new Date(a.json.sent_at));\n  const lastMsg2 = logsForMsg2[0].json;\n  \n  const diffDays = Math.floor((new Date() - new Date(lastMsg2.sent_at)) / (1000 * 60 * 60 * 24));\n  \n  if (diffDays >= waitPeriodMsg3) {\n    const hasReplied = lastMsg2.reply_status && String(lastMsg2.reply_status).toLowerCase() !== 'false' && String(lastMsg2.reply_status).trim() !== '';\n    if (!hasReplied) {\n      lead.next_message_number = 3;\n    }\n  }\n\n} else if (highestSent === 3) {\n  const logsForMsg3 = validLogs.filter(h => parseInt(h.json.message_number) === 3);\n  logsForMsg3.sort((a, b) => new Date(b.json.sent_at) - new Date(a.json.sent_at));\n  const lastMsg3 = logsForMsg3[0].json;\n  \n  const diffDays = Math.floor((new Date() - new Date(lastMsg3.sent_at)) / (1000 * 60 * 60 * 24));\n  \n  if (diffDays >= 4) { // 4 days wait after final message\n    const hasReplied = lastMsg3.reply_status && String(lastMsg3.reply_status).toLowerCase() !== 'false' && String(lastMsg3.reply_status).trim() !== '';\n    if (!hasReplied) {\n      // Map directly to your teammate's \"Read but no reply\" branch to trigger the manual task\n      lead.escalate_action = 'Read but no reply'; \n    }\n  }\n}\n\nreturn [{ json: lead }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3792,
+        432
+      ],
+      "id": "6b887d1c-da63-4aa8-8fd1-39f81651b156",
+      "name": "Code (Virtual Phonebook & Logic)"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.escalate_action !== 'none' ? 'escalate' : ($json.next_message_number < 4 ? 'send' : 'skip') }}",
+                    "rightValue": "send",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7696dfa3-71bc-4469-92f9-30c1706e7f93"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "de418d23-8dfb-4f38-83b2-e8b2beb16183",
+                    "leftValue": "={{ $json.escalate_action !== 'none' ? 'escalate' : ($json.next_message_number < 4 ? 'send' : 'skip') }}",
+                    "rightValue": "escalate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "d8633235-77af-4f58-a64f-2bcb75ce1833",
+                    "leftValue": "={{ $json.escalate_action !== 'none' ? 'escalate' : ($json.next_message_number < 4 ? 'send' : 'skip') }}",
+                    "rightValue": "skip",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -3552,
+        432
+      ],
+      "id": "a33d5866-4009-4440-b6d8-92f1546f71fb",
+      "name": "Switch (Route Path)"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 547639688,
+          "mode": "list",
+          "cachedResultName": "Messaging Templates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=547639688"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "message_number",
+              "lookupValue": "={{ $('Code (Virtual Phonebook & Logic)').item.json.next_message_number }}"
+            },
+            {
+              "lookupColumn": "channel",
+              "lookupValue": "WhatsApp"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -3296,
+        320
+      ],
+      "id": "16fe839e-dcd2-4b76-bd48-e0277b5d6459",
+      "name": "Google Sheets (Read Msg Templates)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge lead fields + parsed message body correctly.\nconst items = $input.all();\nconst processedItems = [];\n\nfor (const item of items) {\n  const data = { ...item.json };\n\n  // Get raw template body\n  let messageBody = data.body || \"No template body found\";\n\n  // Pull original lead and logic data from upstream nodes\n  const originalLead    = $('Loop Over Items').item.json;\n  const calculatedLogic = $('Code (Virtual Phonebook & Logic)').item.json;\n\n  // Attach fields needed downstream so they travel with this item\n  data.title              = originalLead.title;\n  data.next_message_number = calculatedLogic.next_message_number;\n  data.intern_whatsapp    = calculatedLogic.intern_whatsapp;\n  data.intern_email       = calculatedLogic.intern_email;\n  data.recipient_phone    = originalLead.phone   || \"\";\n  data.recipient_email    = originalLead.Email   || \"\";\n  data.lead_location      = originalLead.Location || \"your city\";\n\n  // Replace template placeholders\n  messageBody = messageBody.replace(/{{lead_name}}/g, data.title       || \"Team\");\n  messageBody = messageBody.replace(/{{city}}/g,      data.lead_location);\n\n  data.parsed_message = messageBody;\n\n  processedItems.push({ json: data });\n}\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3072,
+        320
+      ],
+      "id": "58b17f79-4ff3-4d55-8cbd-78964af01e55",
+      "name": "Code (Template Parser)"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs",
+          "mode": "list",
+          "cachedResultName": " Official  Marble Factories Detials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1956618426,
+          "mode": "list",
+          "cachedResultName": "Messaging Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MHMnUw7KpP5gAqyFx-HmGcoR4xpXXxJCGD1FLiWseYs/edit#gid=1956618426"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message_id": "={{ String($now.toMillis()) + \"_\" + $json.title }}",
+            "lead_id": "={{ String($json.title) }}",
+            "message_number": "={{ $json.next_message_number }}",
+            "channel": "WhatsApp",
+            "template_id": "={{ $node[\"Google Sheets (Read Msg Templates)\"].json.template_id }}",
+            "delivery_status": "Pending",
+            "messaging_status": "={{ $json.next_message_number === 1 ? 'New' : $json.next_message_number === 2 ? 'Follow-Up 1' : 'Follow-Up 2' }}",
+            "sent_at": "={{ $now }}",
+            "recipient_phone": "={{ $json.recipient_phone }}",
+            "recipient_email": "={{ $json.recipient_email }}",
+            "message_body": "={{ $json.parsed_message }}",
+            "retry_count": "0"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message_number",
+              "displayName": "message_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "messaging_status",
+              "displayName": "messaging_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "read_status",
+              "displayName": "read_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reply_status",
+              "displayName": "reply_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reply_text",
+              "displayName": "reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "retry_count",
+              "displayName": "retry_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recipient_phone",
+              "displayName": "recipient_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recipient_email",
+              "displayName": "recipient_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message_body",
+              "displayName": "message_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2496,
+        192
+      ],
+      "id": "76f9189f-a227-46c1-82e4-698057f79e15",
+      "name": "Append Queue",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aaPzvRnAITZqBSvX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IjAXV40aWU9vudpL",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IjAXV40aWU9vudpL",
+          "cachedResultName": "WF 6.5 Message Delivery Engine"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message_id": "={{ $json.message_id }}",
+            "lead_id": "={{ $json.lead_id }}",
+            "channel": "={{ $json.channel }}",
+            "recipient_phone": "={{ $json.recipient_phone }}",
+            "recipient_email": "={{ $json.recipient_email }}",
+            "message_body": "={{ $json.message_body }}",
+            "message_number": "={{ $json.message_number }}",
+            "template_id": "={{ $json.template_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "recipient_phone",
+              "displayName": "recipient_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "recipient_email",
+              "displayName": "recipient_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "message_body",
+              "displayName": "message_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "message_number",
+              "displayName": "message_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -2640,
+        320
+      ],
+      "id": "77b37b5b-2568-40d6-af53-63ec8e79fa8e",
+      "name": "Execute WF 6.5 (Message Delivery Engine)",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "w8bwsaSG8lR8Pzx3",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/w8bwsaSG8lR8Pzx3",
+          "cachedResultName": "WF9 — Decision Engine 22"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.title }}",
+            "outcome": "={{ $json.escalate_action }}",
+            "triggering_event": "wait_period_elapsed",
+            "source_workflow": "WF6"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "triggering_event",
+              "displayName": "triggering_event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "reply_text",
+              "displayName": "reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "source_workflow",
+              "displayName": "source_workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3296,
+        544
+      ],
+      "id": "a19c07cd-768d-4f21-bc5a-395f6289e134",
+      "name": "Execute WF9 (Decision Engine)"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -4064,
+        432
+      ],
+      "id": "e268eed0-4ff4-4ee0-8911-78772b0d0d6a",
+      "name": "Loop Over Items"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Read Config)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Read Config)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Lookup History)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Lookup History)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Lookup Intern Contact)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Lookup Intern Contact)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Read Active Leads)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Read Active Leads)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (Virtual Phonebook & Logic)": {
+      "main": [
+        [
+          {
+            "node": "Switch (Route Path)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets (Read Msg Templates)": {
+      "main": [
+        [
+          {
+            "node": "Code (Template Parser)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (Template Parser)": {
+      "main": [
+        [
+          {
+            "node": "Append Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Queue": {
+      "main": [
+        [
+          {
+            "node": "Execute WF 6.5 (Message Delivery Engine)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute WF 6.5 (Message Delivery Engine)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute WF9 (Decision Engine)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code (Virtual Phonebook & Logic)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch (Route Path)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets (Read Msg Templates)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute WF9 (Decision Engine)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "df5411ec-9418-4c8b-a7be-6e5a39cc6562",
+  "meta": {
+    "instanceId": "7b306457276a81e33e9c2d7bd74063f36caaef0e7cf8611eee8b3332bb2dd71e"
+  },
+  "nodeGroups": [],
+  "id": "NgzD78LPxr8VZJ0q",
+  "tags": []
+}
